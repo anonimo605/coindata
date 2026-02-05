@@ -18,6 +18,6 @@ export function generateReferralCodeFromUID(uid: string): string {
   // This creates a compact, alphanumeric representation.
   const code = Math.abs(hash).toString(36).toUpperCase();
 
-  // Pad with leading 'D' and take a slice to ensure a consistent length (e.g., 8 characters).
-  return ('D' + code + '00000000').slice(0, 8);
+  // Pad with leading 'R' and take a slice to ensure a consistent length (e.g., 8 characters).
+  return ('R' + code + '00000000').slice(0, 8);
 }
