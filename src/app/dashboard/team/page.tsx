@@ -4,7 +4,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, where, doc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Users, DollarSign, Copy, CheckCircle, User } from 'lucide-react';
+import { Users, DollarSign, Copy, User } from 'lucide-react';
 import { useCurrency } from '@/context/currency-context';
 import type { UserProfile, Transaction } from '@/lib/types';
 import { format } from 'date-fns';
@@ -14,19 +14,12 @@ import { UserPlansModal } from '@/app/dashboard/components/UserPlansModal';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { generateReferralCodeFromUID } from "@/lib/referral";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 
 const ReferralSection = () => {
     const { user, isUserLoading } = useUser();
-    const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+    const { toast } = useToast();
     const [referralLink, setReferralLink] = useState('');
 
     useEffect(() => {
@@ -40,57 +33,42 @@ const ReferralSection = () => {
     const handleCopy = () => {
         if (!referralLink) return;
         navigator.clipboard.writeText(referralLink);
-        setShowSuccessDialog(true);
+        toast({
+            title: "¡Enlace Copiado!",
+            description: "Tu enlace de referido ha sido copiado.",
+        });
     };
 
     return (
-        <>
-            <Card className="w-full shadow-lg bg-gradient-to-r from-primary to-blue-700 text-white">
-                <CardHeader>
-                    <div className="flex items-center gap-4">
-                        <div className="bg-white/20 p-3 rounded-full">
-                            <Users className="h-6 w-6 text-white" />
-                        </div>
-                        <div>
-                            <CardTitle className="text-white">Invita y Gana</CardTitle>
-                            <CardDescription className="text-blue-200">Comparte tu enlace de referido con amigos.</CardDescription>
-                        </div>
+        <Card className="w-full shadow-lg bg-gradient-to-r from-primary to-blue-700 text-white">
+            <CardHeader>
+                <div className="flex items-center gap-4">
+                    <div className="bg-white/20 p-3 rounded-full">
+                        <Users className="h-6 w-6 text-white" />
                     </div>
-                </CardHeader>
-                <CardContent>
                     <div>
-                        <Label className="text-blue-200">Tu enlace de referido:</Label>
-                        <div className="flex items-center gap-2 mt-1">
-                            <Input
-                                readOnly
-                                value={isUserLoading ? "Cargando..." : referralLink}
-                                placeholder="Generando tu enlace..."
-                                className="bg-white/10 border-0 text-white placeholder:text-blue-300"
-                            />
-                            <Button variant="ghost" size="icon" onClick={handleCopy} disabled={!referralLink || isUserLoading} className="hover:bg-white/20">
-                                <Copy className="h-4 w-4" />
-                            </Button>
-                        </div>
+                        <CardTitle className="text-white">Invita y Gana</CardTitle>
+                        <CardDescription className="text-blue-200">Comparte tu enlace de referido con amigos.</CardDescription>
                     </div>
-                </CardContent>
-            </Card>
-
-            <AlertDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-                <AlertDialogContent>
-                    <AlertDialogHeader className="items-center text-center">
-                        <CheckCircle className="h-16 w-16 text-green-500 mb-4" />
-                        <AlertDialogTitle className="text-lg">¡Enlace Copiado!</AlertDialogTitle>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter className="sm:justify-center">
-                        <AlertDialogAction 
-                          onClick={() => setShowSuccessDialog(false)}
-                        >
-                            Cerrar
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-        </>
+                </div>
+            </CardHeader>
+            <CardContent>
+                <div>
+                    <Label className="text-blue-200">Tu enlace de referido:</Label>
+                    <div className="flex items-center gap-2 mt-1">
+                        <Input
+                            readOnly
+                            value={isUserLoading ? "Cargando..." : referralLink}
+                            placeholder="Generando tu enlace..."
+                            className="bg-white/10 border-0 text-white placeholder:text-blue-300"
+                        />
+                        <Button variant="ghost" size="icon" onClick={handleCopy} disabled={!referralLink || isUserLoading} className="hover:bg-white/20">
+                            <Copy className="h-4 w-4" />
+                        </Button>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
     );
 };
 
