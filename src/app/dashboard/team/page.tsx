@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
+import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
+import { collection, query, where, doc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Users, DollarSign, Copy, CheckCircle, User } from 'lucide-react';
 import { useCurrency } from '@/context/currency-context';
@@ -101,17 +101,17 @@ const TeamPage = () => {
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [isPlansModalOpen, setIsPlansModalOpen] = useState(false);
 
-  const userQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return query(collection(firestore, 'users'), where('id', '==', user.uid));
-  }, [firestore, user]);
-  const { data: userData } = useCollection<UserProfile>(userQuery);
-  const currentUser = userData?.[0];
+  const userDocRef = useMemoFirebase(
+    () => (user ? doc(firestore, `users/${user.uid}`) : null),
+    [firestore, user]
+  );
+  const { data: currentUserProfile } = useDoc<UserProfile>(userDocRef);
+
 
   const referralsQuery = useMemoFirebase(() => {
-    if (!firestore || !currentUser?.referralCode) return null;
-    return query(collection(firestore, 'users'), where('referredBy', '==', currentUser.referralCode));
-  }, [firestore, currentUser]);
+    if (!firestore || !currentUserProfile?.referralCode) return null;
+    return query(collection(firestore, 'users'), where('referredBy', '==', currentUserProfile.referralCode));
+  }, [firestore, currentUserProfile]);
   const { data: referredUsers, isLoading: isLoadingReferrals } = useCollection<UserProfile>(referralsQuery);
 
     const commissionsQuery = useMemoFirebase(() => {
@@ -196,27 +196,27 @@ const TeamPage = () => {
               {isLoadingReferrals ? <p>Cargando miembros...</p> : (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {referredUsers && referredUsers.length > 0 ? (
-                      referredUsers.map(refUser => (
-                      <Card key={refUser.id} className="flex flex-col">
+                      referredUsers.map(referredUser => (
+                      <Card key={referredUser.id} className="flex flex-col">
                         <CardHeader className="flex-row items-center gap-4 pb-4">
                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted">
                               <User className="h-5 w-5 text-muted-foreground" />
                            </div>
                            <div>
-                              <p className="font-bold">{refUser.email.split('@')[0]}</p>
+                              <p className="font-bold">{referredUser.email.split('@')[0]}</p>
                               <p className="text-xs text-muted-foreground">
-                                  Registro: {format(new Date((refUser as any).registrationDate), 'dd MMM yyyy', { locale: es })}
+                                  Registro: {format(new Date((referredUser as any).registrationDate), 'dd MMM yyyy', { locale: es })}
                               </p>
                            </div>
                         </CardHeader>
                         <CardContent className="flex-grow">
                            <div className="flex justify-between items-center p-3 bg-muted rounded-md">
                               <span className="text-sm text-muted-foreground">Balance</span>
-                              <span className="font-bold">{formatCurrency(refUser.balance ?? 0)}</span>
+                              <span className="font-bold">{formatCurrency(referredUser.balance ?? 0)}</span>
                            </div>
                         </CardContent>
                         <CardFooter>
-                            <Button variant="outline" size="sm" className="w-full" onClick={() => handleViewPlans(refUser)}>
+                            <Button variant="outline" size="sm" className="w-full" onClick={() => handleViewPlans(referredUser)}>
                                 Ver Planes
                             </Button>
                         </CardFooter>
